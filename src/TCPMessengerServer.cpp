@@ -8,6 +8,8 @@
 #include "TCPMessengerServer.h"
 #include "TCPMessengerProtocol.h"
 
+#define USERS_FILE ("users.txt")
+
 TCPMessengerServer::TCPMessengerServer()
 {
 	m_tcpServerSocket = new TCPSocket(MSNGR_PORT);
@@ -33,7 +35,19 @@ void TCPMessengerServer::run()
 
 void TCPMessengerServer::ListAllUsers()
 {
+	string user;
+	string password;
 
+	// Open the "users" file
+	ifstream usersFile;
+	usersFile.open(USERS_FILE);
+
+	while (usersFile >> user >> password)
+	{
+		cout << user << endl;
+	}
+
+	usersFile.close();
 }
 
 void TCPMessengerServer::ListConnectedUsers()
@@ -42,18 +56,67 @@ void TCPMessengerServer::ListConnectedUsers()
 	peers::iterator endIter = m_openedPeers.end();
 	for(;iter != endIter; iter++)
 	{
-		cout << (*iter).second->GetDestIpAndPort() << endl;
+		cout << (*iter).second->userName << endl;
+	}
+
+	iter = m_busyPeers.begin();
+	endIter = m_busyPeers.end();
+	for(;iter != endIter; iter++)
+	{
+		cout << (*iter).second->userName << endl;
+	}
+}
+
+void TCPMessengerServer::ListAllSessions()
+{
+	cout << " There are " << m_openSessions.size() << "open Sessions" << endl;
+	if (m_openSessions.size() != 0)
+	{
+		map<string, string>::iterator iter = m_openSessions.begin();
+		map<string, string>::iterator endIter = m_openSessions.end();
+		string firstUser;
+		string secondUser;
+		for(;iter != endIter; iter++)
+		{
+			firstUser = m_busyPeers.find((*iter).first)->second->userName;
+			secondUser = m_busyPeers.find((*iter).second)->second->userName;
+			cout << "session between " <<  firstUser << " and " << secondUser << endl;
+		}
 	}
 }
 
 void TCPMessengerServer::ListAllRooms()
 {
-
+	cout << " There are " << m_chatRooms.size() << "open chats" << endl;
+	if (m_chatRooms.size() != 0)
+	{
+		vector<Chat*>::iterator iter = m_chatRooms.begin();
+		vector<Chat*>::iterator endIter = m_chatRooms.end();
+		for(;iter != endIter; iter++)
+		{
+			cout << (*iter)->GetRoomName() << endl;
+		}
+	}
 }
 
 void TCPMessengerServer::ListAllUsersInRoom(string room)
 {
+	Chat* chat = getRoomByName(room);
 
+	if (chat == NULL)
+	{
+		cout << "room " << room << " not found" << endl;
+		return;
+	}
+
+	cout << "There are " << chat->m_connectedClients.size << " clients in room " << room << ":" <<endl;
+	vector<SUser*>::iterator iter = chat->m_connectedClients.begin();
+	vector<SUser*>::iterator iterEnd = chat->m_connectedClients.end();
+
+	for(;iter != iterEnd; iter++)
+	{
+		cout << (*iter)->userName << endl;
+	}
 }
 
 void TCPMessengerServer::Close()
@@ -180,4 +243,18 @@ void TCPMessengerServer::sendDataToPeer(TCPSocket* peer, string msg)
 	peer->send(msg.data(), msg.length());
 }
 
+Chat* TCPMessengerServer::getRoomByName(string roomName)
+{
+	vector<Chat*>::iterator iter = m_chatRooms.begin();
+	vector<Chat*>::iterator iterEnd = m_chatRooms.begin();
 
+	for(; iter != iterEnd; iter++)
+	{
+		if ((*iter)->GetRoomName() == roomName)
+		{
+			return (*iter);
+		}
+	}
+
+	return NULL;
+}

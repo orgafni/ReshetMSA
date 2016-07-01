@@ -11,9 +11,12 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <fstream>
 #include "MThread.h"
 #include "PeersRequestsDispatcher.h"
 #include "TCPSocket.h"
+#include "User.h"
+#include "Chat.h"
 
 using namespace std;
 
@@ -27,9 +30,13 @@ private:
 	TCPSocket*				 m_tcpServerSocket;
 	bool 					 m_isRunning;
 
-	typedef map<string, TCPSocket*> peers;
+	typedef map<string, SUser*> peers;
 	peers m_openedPeers;
 	peers m_busyPeers;
+
+	vector<Chat*> m_chatRooms;
+
+	map <string, string> m_openSessions;
 
 public:
 	TCPMessengerServer();
@@ -41,12 +48,18 @@ public:
 	 */
 	void run();
 
+	/**
+	 * This function prints all the users.
+	 * The users are defines in a file
+	 */
 	void ListAllUsers();
 
 	/**
 	 * This function print out the list of connected clients
 	 */
 	void ListConnectedUsers();
+
+	void ListAllSessions();
 
 	void ListAllRooms();
 
@@ -104,6 +117,8 @@ private:
 	 * send data to peer
 	 */
 	void sendDataToPeer(TCPSocket* peer, string msg);
+
+	Chat* getRoomByName(string roomName);
 };
 
 #endif /* TCPMESSENGERSERVER_H_ */

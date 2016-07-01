@@ -12,6 +12,7 @@ using namespace std;
 
 const char* SERVER_CLI_listAllUsers = "lu";
 const char* SERVER_CLI_listAllConnectedUsers = "lcu";
+const char* SERVER_CLI_listAllSessions = "ls";
 const char* SERVER_CLI_listAllRooms = "lr";
 const char* SERVER_CLI_listAllUsersInRoom = "lru";
 const char* SERVER_CLI_help = "h";
@@ -22,6 +23,7 @@ void printMenu()
 	cout << "options:" << endl;
 	cout << "%s - prints user names on server" << SERVER_CLI_listAllUsers <<endl;
 	cout << "%s - prints user names available on server" << SERVER_CLI_listAllConnectedUsers <<endl;
+	cout << "%s - prints all sessions (two users communicates)" << SERVER_CLI_listAllSessions <<endl;
 	cout << "%s - print all rooms on server" << SERVER_CLI_listAllRooms <<endl;
 	cout << "%s - print all users in room" << SERVER_CLI_listAllUsersInRoom <<endl;
 	cout << "%s	- print this menu" << SERVER_CLI_help <<endl;
@@ -49,6 +51,10 @@ int main()
 		else if (command == SERVER_CLI_listAllConnectedUsers)
 		{
 			messengerServer.ListConnectedUsers();
+		}
+		else if (command == SERVER_CLI_listAllSessions)
+		{
+			messengerServer.ListAllSessions();
 		}
 		else if (command == SERVER_CLI_listAllRooms)
 		{

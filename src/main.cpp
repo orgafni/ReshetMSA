@@ -44,21 +44,21 @@ int main()
 
 		if (command == SERVER_CLI_listAllUsers)
 		{
-			messengerServer->listAllUsers();
+			messengerServer.ListAllUsers();
 		}
 		else if (command == SERVER_CLI_listAllConnectedUsers)
 		{
-			messengerServer->listAllConnectedUsers();
+			messengerServer.ListConnectedUsers();
 		}
 		else if (command == SERVER_CLI_listAllRooms)
 		{
-			messengerServer->listAllRooms();
+			messengerServer.ListAllRooms();
 		}
 		else if (command == SERVER_CLI_listAllUsersInRoom)
 		{
 			string room;
 			cin >> room;
-			messengerServer->listAllUsersInRoom(room);
+			messengerServer.ListAllUsersInRoom(room);
 		}
 		else if (command == SERVER_CLI_help)
 		{
@@ -78,38 +78,5 @@ int main()
 	messengerServer.waitForThread();
 	cout << "messenger server is closed" << endl;
 
-	return 0;
-}
-
-int main()
-{
-	cout << "This is TCP Messenger Server" << endl;
-	printInstructions();
-	TCPMessengerServer messengerServer;
-	messengerServer.start();
-	bool loop = true;
-	while (loop == true)
-	{
-		string msg;
-		string command;
-		cin >> command;
-		if (command == "lp")
-		{
-			messengerServer.ListPeers();
-		}
-		else if (command == "x")
-		{
-			loop = false;
-		}
-		else
-		{
-			cout << "wrong input" << endl;
-			printInstructions();
-		}
-	}
-
-	messengerServer.Close();
-	messengerServer.waitForThread();
-	cout << "messenger is closed" << endl;
 	return 0;
 }

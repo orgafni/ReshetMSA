@@ -41,10 +41,16 @@ public:
 	 */
 	void run();
 
+	void ListAllUsers();
+
 	/**
 	 * This function print out the list of connected clients
 	 */
 	void ListConnectedUsers();
+
+	void ListAllRooms();
+
+	void ListAllUsersInRoom(string room);
 
 	/**
 	 * This function close the server

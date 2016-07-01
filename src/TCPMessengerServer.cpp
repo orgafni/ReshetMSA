@@ -31,6 +31,11 @@ void TCPMessengerServer::run()
 	}
 }
 
+void TCPMessengerServer::ListAllUsers()
+{
+
+}
+
 void TCPMessengerServer::ListConnectedUsers()
 {
 	peers::iterator iter = m_openedPeers.begin();
@@ -39,6 +44,16 @@ void TCPMessengerServer::ListConnectedUsers()
 	{
 		cout << (*iter).second->GetDestIpAndPort() << endl;
 	}
+}
+
+void TCPMessengerServer::ListAllRooms()
+{
+
+}
+
+void TCPMessengerServer::ListAllUsersInRoom(string room)
+{
+
 }
 
 void TCPMessengerServer::Close()

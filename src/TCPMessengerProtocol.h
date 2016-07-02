@@ -13,14 +13,37 @@
  * all messages are of the format [Command 4 byte int]
  * and optionally data follows in the format [Data length 4 byte int][ Data ]
  */
-#define MSNGR_PORT 3346
+#define MSNGR_PORT 1234
 
-#define CLOSE_SESSION_WITH_PEER 	1
-#define OPEN_SESSION_WITH_PEER 		2
-#define EXIT						3
-#define SEND_MSG_TO_PEER			4
-#define SESSION_REFUSED				5
-#define SESSION_ESTABLISHED			6
+enum ECommands
+{
+	CLOSE_SESSION_WITH_PEER 	= 1,
+	CLOSE_SESSION_WITH_ROOM,
+	OPEN_SESSION_WITH_PEER,
+	EXIT,
+	SESSION_REFUSED,
+	SESSION_ESTABLISHED,
+	CONNECTION_REFUSED,
+	CONNECTION_VALID,
+	USER_EXISTS,
+	SIGNUP_OK,
+	SIGNUP,
+	LOGIN,
+	ALL_USERS,
+	CONNECTED_USERS,
+	ROOM_USERS,
+	ALL_ROOMS,
+	ROOM_NOT_EXIST,
+	CONNECTED_TO_ROOM,
+	OPEN_ROOM,
+	ROOM_EXIST,
+	DISCONNECT,
+	GET_USER_DETAILS,
+	USER_NO_EXIST,
+	NO_ROOMS,
+	NO_USERS,
+	ENTER_ROOM
+};
 
 #define TEST_PEER_NAME "test"
 #define SESSION_REFUSED_MSG "Connection to peer refused, peer might be busy or disconnected, try again later"

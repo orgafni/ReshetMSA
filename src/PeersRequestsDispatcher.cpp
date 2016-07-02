@@ -9,7 +9,6 @@
 #include "TCPMessengerServer.h"
 #include "TCPMessengerProtocol.h"
 #include "MultipleTCPSocketListener.h"
-#include "Broker.h"
 #include "strings.h"
 
 PeersRequestsDispatcher::PeersRequestsDispatcher(TCPMessengerServer* messenger)
@@ -26,41 +25,132 @@ void PeersRequestsDispatcher::run()
 		MultipleTCPSocketListener msp;
 		msp.addSockets(m_messenger->getPeersVec());
 		TCPSocket* readyPeer = msp.listenToSocket(2);
-		if (readyPeer == NULL) continue;
+		if (readyPeer == NULL)
+		{
+			continue;
+		}
 		int command = m_messenger->readCommandFromPeer(readyPeer);
 		string peerName;
-		TCPSocket* secondPeer;
 
 		switch (command)
 		{
-			case (OPEN_SESSION_WITH_PEER):
+			case (SIGNUP):
 			{
-				peerName = m_messenger->readDataFromPeer(readyPeer);
-				cout << "got open session command: " << readyPeer->GetDestIpAndPort() << "->"  << peerName << endl;
-				secondPeer = m_messenger->getAvailablePeerByName(peerName);
-				if (secondPeer != NULL)
-				{
-					m_messenger->sendCommandToPeer(readyPeer, SESSION_ESTABLISHED);
-					m_messenger->sendCommandToPeer(secondPeer, OPEN_SESSION_WITH_PEER);
-					m_messenger->sendDataToPeer(secondPeer, readyPeer->GetDestIpAndPort());
-					m_messenger->markPeerAsUnavailable(secondPeer);
-					m_messenger->markPeerAsUnavailable(readyPeer);
+				m_messenger->SignUpClient(readyPeer);
+				break;
+			}
+			case (LOGIN):
+			{
+				m_messenger->LoginClient(readyPeer);
+				break;
+			}
+			case (ALL_USERS):
+			{
+				string usersInServer = m_messenger->GetAllUserNames();
 
-					(new Broker(readyPeer, secondPeer, m_messenger))->start();
+				// If there are not users
+				if (usersInServer == "")
+				{
+					m_messenger->sendCommandToPeer(readyPeer, NO_USERS);
 				}
 				else
 				{
-					cout << "FAIL: didn't find peer: " << peerName << endl;
-					m_messenger->sendCommandToPeer(readyPeer, SESSION_REFUSED);
+					m_messenger->sendCommandToPeer(readyPeer, ALL_USERS);
+					m_messenger->sendDataToPeer(readyPeer, usersInServer);
 				}
+
+				break;
+			}
+			case (OPEN_SESSION_WITH_PEER):
+			{
+				m_messenger->ConnectClients(readyPeer);
+				break;
+			}
+			case (CONNECTED_USERS):
+			{
+				string connectedUsersInServer = m_messenger->GetAllConnectedUserNames();
+
+				// If there are not users
+				if (connectedUsersInServer == "")
+				{
+					m_messenger->sendCommandToPeer(readyPeer, NO_USERS);
+				}
+				else
+				{
+					m_messenger->sendCommandToPeer(readyPeer, CONNECTED_USERS);
+					m_messenger->sendDataToPeer(readyPeer, connectedUsersInServer);
+				}
+
+				break;
+			}
+			case (CLOSE_SESSION_WITH_PEER):
+			{
+				SUser* user = m_messenger->GetUserBySocket(readyPeer);
+				m_messenger->closeSession(user);
+
+				break;
+			}
+			case (ALL_ROOMS):
+			{
+				string roomsNames = m_messenger->GetAllRoomNames();
+
+				// If there are not users
+				if (roomsNames == "")
+				{
+					m_messenger->sendCommandToPeer(readyPeer, NO_ROOMS);
+				}
+				else
+				{
+					m_messenger->sendCommandToPeer(readyPeer, ALL_ROOMS);
+					m_messenger->sendDataToPeer(readyPeer, roomsNames);
+				}
+
+				break;
+			}
+			case (ROOM_USERS):
+			{
+				// Get roomName from client
+				string roomName = m_messenger->readDataFromPeer(readyPeer);
+
+				Chat* chat = m_messenger->getRoomByName(roomName);
+
+				// If no such room found
+				if (chat == NULL)
+				{
+					m_messenger->sendCommandToPeer(readyPeer, ROOM_NOT_EXIST);
+				}
+				else
+				{
+					string usersInRoom = m_messenger->GetAllUsersInRoom(chat);
+
+					m_messenger->sendCommandToPeer(readyPeer, ROOM_USERS);
+					m_messenger->sendDataToPeer(readyPeer, usersInRoom);
+				}
+
+				break;
+			}
+			case (OPEN_ROOM):
+			{
+				m_messenger->CreateNewRoom(readyPeer);
+				break;
+			}
+			case (ENTER_ROOM):
+			{
+				m_messenger->EnterRoom(readyPeer);
+				break;
+			}
+			case (DISCONNECT):
+			{
+				m_messenger->Disconnect(readyPeer);
 				break;
 			}
 			default:
 			{
-				cout << "peer disconnected: " << readyPeer->GetDestIpAndPort() << endl;
-				m_messenger->peerDisconnect(readyPeer);
+				SUser* user = m_messenger->GetUserBySocket(readyPeer);
+				cout << "the user <" << user->userName << "> send unknown command <" << command << ">" << endl;
 				break;
 			}
+
 		}
 	}
 

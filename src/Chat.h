@@ -9,6 +9,8 @@
 #define SRC_CHAT_H_
 
 #include <string>
+#include <vector>
+#include "User.h"
 
 class TCPMessengerServer;
 
@@ -19,15 +21,19 @@ class Chat
 	friend class TCPMessengerServer;
 
 public:
-	Chat(){};
+	Chat(SUser* creator, string roomName, TCPMessengerServer* server);
 
 	string GetRoomName()
 	{
 		return m_roomName;
 	}
 
+	void AddUserToRoom(SUser* user);
+
 private:
 	string m_roomName;
+	SUser* m_creator;
+	TCPMessengerServer* m_server;
 	vector<SUser*> m_connectedClients;
 };
 

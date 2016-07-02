@@ -7,12 +7,21 @@
 
 #include "Chat.h"
 
-Chat::Chat() {
-	// TODO Auto-generated constructor stub
+#include "TCPMessengerServer.h"
 
+Chat::Chat(SUser* creator, string roomName, TCPMessengerServer* server)
+{
+	m_roomName = roomName;
+	m_creator = creator;
+	m_server = server;
+
+	AddUserToRoom(creator);
 }
 
-Chat::~Chat() {
-	// TODO Auto-generated destructor stub
-}
 
+void Chat::AddUserToRoom(SUser* user)
+{
+	m_connectedClients.push_back(user);
+
+	m_server->markPeerAsUnavailable(user);
+}

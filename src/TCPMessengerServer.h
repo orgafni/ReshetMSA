@@ -23,7 +23,7 @@ using namespace std;
 class TCPMessengerServer : public MThread
 {
 	friend class PeersRequestsDispatcher;
-	friend class Broker;
+	friend class Chat;
 
 private:
 	PeersRequestsDispatcher* m_dispatcher;
@@ -33,6 +33,7 @@ private:
 	typedef map<string, SUser*> peers;
 	peers m_openedPeers;
 	peers m_busyPeers;
+	peers m_waitingPeers;
 
 	vector<Chat*> m_chatRooms;
 
@@ -48,6 +49,7 @@ public:
 	 */
 	void run();
 
+	/** ======= Function available from Server CLI: ======= **/
 	/**
 	 * This function prints all the users.
 	 * The users are defines in a file
@@ -59,16 +61,83 @@ public:
 	 */
 	void ListConnectedUsers();
 
+	/**
+	 * List all open sessions between two clients
+	 */
 	void ListAllSessions();
 
+	/**
+	 * List all rooms in the server
+	 */
 	void ListAllRooms();
 
-	void ListAllUsersInRoom(string room);
+	/**
+	 * List list all the clients connected to the received room
+	 */
+	void ListAllUsersInRoom(string roomName);
 
 	/**
 	 * This function close the server
 	 */
 	void Close();
+
+	/** ======== Function called from peers dispatcher ======= **/
+
+	/**
+	 * Sign up client to the server
+	 */
+	void SignUpClient(TCPSocket* client);
+
+	/**
+	 * Login signedUp client to the server
+	 */
+	void LoginClient(TCPSocket* client);
+
+	/**
+	 * This function return the names of all the users registered to the server
+	 */
+	string GetAllUserNames();
+
+	/**
+	 * This function return the names of all the users connected to the server
+	 */
+	string GetAllConnectedUserNames();
+
+	/**
+	 * This function return the names of all the rooms users in the server
+	 */
+	string GetAllRoomNames();
+
+	/**
+	 * This function return all the users names connected to the received room
+	 */
+	string GetAllUsersInRoom(Chat* chat);
+
+	/**
+	 * This function connect the received client with his requested client
+	 */
+	void ConnectClients(TCPSocket* initiatorClient);
+
+	/**
+	 * This function create a room, as requested by received peer
+	 */
+	void CreateNewRoom(TCPSocket* peer);
+
+	/**
+	 * This function enter the received peer to the room he request.
+	 */
+	void EnterRoom(TCPSocket* peer);
+
+	/**
+	 * This function disconnect the received peer from the server
+	 */
+	void Disconnect(TCPSocket* peer);
+
+	/** ======== Utils functions ======= **/
+
+	SUser* GetUserBySocket(TCPSocket* peer);
+
+
 
 private:
 
@@ -77,11 +146,11 @@ private:
 	 */
 	vector<TCPSocket*> getPeersVec();
 
-	/**
-	 * return the open peer that matches the given name (IP:port)
-	 * return NULL if there is no match to the given name
-	 */
-	TCPSocket* getAvailablePeerByName(string peerName);
+//	/**
+//	 * return the open peer that matches the given name (IP:port)
+//	 * return NULL if there is no match to the given name
+//	 */
+//	TCPSocket* getAvailablePeerByName(string peerName);
 
 	/**
 	 * remove and delets the given peer
@@ -91,12 +160,12 @@ private:
 	/**
 	 * move the given peer from the open to the busy peers list
 	 */
-	void markPeerAsUnavailable(TCPSocket* peer);
+	void markPeerAsUnavailable(SUser* peer);
 
 	/**
 	 * move the given peer from the busy to the open peers list
 	 */
-	void markPeerAsAvailable(TCPSocket* peer);
+	void markPeerAsAvailable(SUser* peer);
 
 	/**
 	 * read command from peer
@@ -119,6 +188,23 @@ private:
 	void sendDataToPeer(TCPSocket* peer, string msg);
 
 	Chat* getRoomByName(string roomName);
+
+	SUser* getAvailableUserByName(string userName);
+
+
+	void closeSession(SUser* user);
+
+	bool closeSessionWithUserIfExist(SUser* user);
+
+	bool closeSessionWithRoomIfExist(SUser* user);
+
+	void sendOpenSessionMsgs(SUser* firstUser, SUser* secondUser);
+
+	void sendCloseSessionMsgs(SUser* initiatorUser, SUser* otherUser);
+
+	void sendLeftRoomMsgs(SUser* userLeft, SUser* otherUser);
+
+	string convertVectorDetailsToString(vector<string> userDetails);
 };
 
 #endif /* TCPMESSENGERSERVER_H_ */

@@ -48,16 +48,8 @@ void PeersRequestsDispatcher::run()
 			{
 				string usersInServer = m_messenger->GetAllUserNames();
 
-				// If there are not users
-				if (usersInServer == "")
-				{
-					m_messenger->sendCommandToPeer(readyPeer, NO_USERS);
-				}
-				else
-				{
-					m_messenger->sendCommandToPeer(readyPeer, ALL_USERS);
-					m_messenger->sendDataToPeer(readyPeer, usersInServer);
-				}
+				m_messenger->sendCommandToPeer(readyPeer, ALL_USERS);
+				m_messenger->sendDataToPeer(readyPeer, usersInServer);
 
 				break;
 			}
@@ -70,16 +62,8 @@ void PeersRequestsDispatcher::run()
 			{
 				string connectedUsersInServer = m_messenger->GetAllConnectedUserNames();
 
-				// If there are not users
-				if (connectedUsersInServer == "")
-				{
-					m_messenger->sendCommandToPeer(readyPeer, NO_USERS);
-				}
-				else
-				{
-					m_messenger->sendCommandToPeer(readyPeer, CONNECTED_USERS);
-					m_messenger->sendDataToPeer(readyPeer, connectedUsersInServer);
-				}
+				m_messenger->sendCommandToPeer(readyPeer, CONNECTED_USERS);
+				m_messenger->sendDataToPeer(readyPeer, connectedUsersInServer);
 
 				break;
 			}
@@ -118,6 +102,7 @@ void PeersRequestsDispatcher::run()
 				if (chat == NULL)
 				{
 					m_messenger->sendCommandToPeer(readyPeer, ROOM_NOT_EXIST);
+					m_messenger->sendDataToPeer(readyPeer, roomName);
 				}
 				else
 				{

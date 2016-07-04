@@ -812,11 +812,11 @@ void TCPMessengerServer::sendLeftRoomMsgs(SUser* userLeft, SUser* otherUser)
 
 	string stringDetails = convertVectorDetailsToString(userLeftDetails);
 
-	// Notify the otherUser the the initiatorUser closed their session
+	// Notify the otherUser that userLeft left the room
 	sendCommandToPeer(otherUser->socket, CLOSE_SESSION_WITH_ROOM);
 	sendDataToPeer(otherUser->socket, stringDetails);
 
-	// Notify the initiatorUser that he close his session
+	// Notify the userLeft that he left the room
 	sendCommandToPeer(userLeft->socket, CLOSE_SESSION_WITH_ROOM);
 	sendDataToPeer(userLeft->socket, "me");
 }

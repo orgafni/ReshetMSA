@@ -21,13 +21,14 @@ const char* SERVER_CLI_closeTheApp = "x";
 void printMenu()
 {
 	cout << "options:" << endl;
-	cout << "%s - prints user names on server" << SERVER_CLI_listAllUsers <<endl;
-	cout << "%s - prints user names available on server" << SERVER_CLI_listAllConnectedUsers <<endl;
-	cout << "%s - prints all sessions (two users communicates)" << SERVER_CLI_listAllSessions <<endl;
-	cout << "%s - print all rooms on server" << SERVER_CLI_listAllRooms <<endl;
-	cout << "%s - print all users in room" << SERVER_CLI_listAllUsersInRoom <<endl;
-	cout << "%s	- print this menu" << SERVER_CLI_help <<endl;
-	cout << "%s	- shutdown" << SERVER_CLI_closeTheApp <<endl;
+	printf("%s - prints user names on server\n", SERVER_CLI_listAllUsers);
+	printf("%s - prints user names on server\n", SERVER_CLI_listAllUsers);
+	printf("%s - prints user names available on server\n", SERVER_CLI_listAllConnectedUsers);
+	printf("%s - prints all sessions (two users communicates)\n", SERVER_CLI_listAllSessions);
+	printf("%s - print all rooms on server\n", SERVER_CLI_listAllRooms);
+	printf("%s - print all users in room\n", SERVER_CLI_listAllUsersInRoom);
+	printf("%s	- print this menu\n", SERVER_CLI_help);
+	printf("%s	- shutdown\n", SERVER_CLI_closeTheApp);
 }
 
 int main()

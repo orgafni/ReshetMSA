@@ -771,6 +771,10 @@ bool TCPMessengerServer::closeSessionWithRoomIfExist(SUser* user)
 				sendLeftRoomMsgs(user, (*userIter));
 			}
 
+			// Notify the userLeft that he left the room
+			sendCommandToPeer(user->socket, CLOSE_SESSION_WITH_ROOM);
+			sendDataToPeer(user->socket, "me");
+
 			sessionFound = true;
 			markPeerAsAvailable(user);
 
@@ -835,10 +839,6 @@ void TCPMessengerServer::sendLeftRoomMsgs(SUser* userLeft, SUser* otherUser)
 	// Notify the otherUser that userLeft left the room
 	sendCommandToPeer(otherUser->socket, CLOSE_SESSION_WITH_ROOM);
 	sendDataToPeer(otherUser->socket, stringDetails);
-
-	// Notify the userLeft that he left the room
-	sendCommandToPeer(userLeft->socket, CLOSE_SESSION_WITH_ROOM);
-	sendDataToPeer(userLeft->socket, "me");
 }
 
 string TCPMessengerServer::convertVectorDetailsToString(vector<string> userDetails)

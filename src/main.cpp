@@ -22,7 +22,6 @@ void printMenu()
 {
 	cout << "options:" << endl;
 	printf("%s - prints user names on server\n", SERVER_CLI_listAllUsers);
-	printf("%s - prints user names on server\n", SERVER_CLI_listAllUsers);
 	printf("%s - prints user names available on server\n", SERVER_CLI_listAllConnectedUsers);
 	printf("%s - prints all sessions (two users communicates)\n", SERVER_CLI_listAllSessions);
 	printf("%s - print all rooms on server\n", SERVER_CLI_listAllRooms);
@@ -77,7 +76,7 @@ int main()
 		}
 		else
 		{
-			cout << "invalid command! type %s for help" << SERVER_CLI_help << endl;
+			printf("invalid command! type %s for help\n", SERVER_CLI_help);
 		}
 	}
 

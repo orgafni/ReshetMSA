@@ -28,6 +28,7 @@ void TCPMessengerServer::run()
 		TCPSocket* peerSocket = m_tcpServerSocket->listenAndAccept();
 		if (peerSocket != NULL)
 		{
+			cout << "new user connected. details = " << peerSocket->GetDestIpAndPort() << endl;
 			m_waitingPeers[peerSocket->GetDestIpAndPort()] = new SUser("", peerSocket, "");
 		}
 	}
@@ -50,7 +51,7 @@ void TCPMessengerServer::ListConnectedUsers()
 
 void TCPMessengerServer::ListAllSessions()
 {
-	cout << " There are " << m_openSessions.size() << "open Sessions" << endl;
+	cout << " There are " << m_openSessions.size() << " open Sessions" << endl;
 	if (m_openSessions.size() != 0)
 	{
 		map<string, string>::iterator iter = m_openSessions.begin();
@@ -61,7 +62,7 @@ void TCPMessengerServer::ListAllSessions()
 		{
 			firstUser = m_busyPeers.find((*iter).first)->second->userName;
 			secondUser = m_busyPeers.find((*iter).second)->second->userName;
-			cout << "session between " <<  firstUser << " and " << secondUser << endl;
+			cout << "session between <" <<  firstUser << "> and <" << secondUser << ">" << endl;
 		}
 	}
 }
@@ -95,21 +96,24 @@ void TCPMessengerServer::Close()
 	cout << "closing server" << endl;
 	m_isRunning = false;
 	m_tcpServerSocket->close();
-	peers::iterator iter = m_openedPeers.begin();
-	peers::iterator endIter = m_openedPeers.end();
+
+	vector<TCPSocket*>socks = getPeersVec();
+	vector<TCPSocket*>::iterator iter = socks.begin();
+	vector<TCPSocket*>::iterator endIter = socks.end();
+//	peers::iterator iter = m_openedPeers.begin();
+//	peers::iterator endIter = m_openedPeers.end();
 	for(;iter != endIter; iter++)
 	{
-		(*iter).second->socket->close();
+		Disconnect((*iter));
 	}
 
-	m_dispatcher->waitForThread();
-	iter = m_openedPeers.begin();
-	endIter = m_openedPeers.end();
-	for(;iter != endIter; iter++)
-	{
-		delete (*iter).second->socket;
-		delete (*iter).second;
-	}
+//	m_dispatcher->waitForThread();
+//	iter = m_openedPeers.begin();
+//	endIter = m_openedPeers.end();
+//	for(;iter != endIter; iter++)
+//	{
+//		delete (*iter).second;
+//	}
 
 	cout << "server closed" << endl;
 }
@@ -232,7 +236,7 @@ void TCPMessengerServer::sendDataToPeer(TCPSocket* peer, string msg)
 Chat* TCPMessengerServer::getRoomByName(string roomName)
 {
 	vector<Chat*>::iterator iter = m_chatRooms.begin();
-	vector<Chat*>::iterator iterEnd = m_chatRooms.begin();
+	vector<Chat*>::iterator iterEnd = m_chatRooms.end();
 
 	for(; iter != iterEnd; iter++)
 	{
@@ -322,6 +326,7 @@ void TCPMessengerServer::SignUpClient(TCPSocket* clientSocket)
 	delimeterIndex = passwordUdpPort.find(":");
 	string userPassword = passwordUdpPort.substr(0, delimeterIndex);
 	string udpPort = passwordUdpPort.substr(delimeterIndex + 1);
+//	DEBUG_PRINT("client signup detailsReceived (%s), after parsing (%s:%s:%s)\n", usernamePasswordUdpPort.data(), userName.data(),userPassword.data(), udpPort.data());
 
 	// Check if the username already in the users file
 	string user;
@@ -359,6 +364,7 @@ void TCPMessengerServer::SignUpClient(TCPSocket* clientSocket)
 
 		// Add the user to the open list
 		m_openedPeers[clientSocket->GetDestIpAndPort()] = new SUser(userName, clientSocket, udpPort);
+//		DEBUG_PRINT("client signup. new user created with (%s:%s)\n", userName.data(), udpPort.data());
 
 		sendCommandToPeer(clientSocket, SIGNUP_OK);
 	}
@@ -379,6 +385,7 @@ void TCPMessengerServer::LoginClient(TCPSocket* clientSocket)
 	delimeterIndex = passwordUdpPort.find(":");
 	string userPassword = passwordUdpPort.substr(0, delimeterIndex);
 	string udpPort = passwordUdpPort.substr(delimeterIndex + 1);
+//	DEBUG_PRINT("client login detailsReceived (%s), after parsing (%s:%s:%s)\n", usernamePasswordUdpPort.data(), userName.data(),userPassword.data(), udpPort.data());
 
 	// Verify that the user exist in the users file, and the password is correct
 	string user;
@@ -408,13 +415,22 @@ void TCPMessengerServer::LoginClient(TCPSocket* clientSocket)
 	}
 	else
 	{
-		// Remove from waiting list
-		m_waitingPeers.erase(clientSocket->GetDestIpAndPort());
+		// Verify that the username requested not already connected
+		if (isUserAlreadyConnected(userName) == true)
+		{
+			sendCommandToPeer(clientSocket, CONNECTION_REFUSED);
+		}
+		else
+		{
+			// Remove from waiting list
+			m_waitingPeers.erase(clientSocket->GetDestIpAndPort());
 
-		// Add the user to the open list
-		m_openedPeers[clientSocket->GetDestIpAndPort()] = new SUser(userName, clientSocket, udpPort);
+	//		DEBUG_PRINT("client login. new user created with (%s:%s)\n", userName.data(), udpPort.data());
+			// Add the user to the open list
+			m_openedPeers[clientSocket->GetDestIpAndPort()] = new SUser(userName, clientSocket, udpPort);
 
-		sendCommandToPeer(clientSocket, CONNECTION_VALID);
+			sendCommandToPeer(clientSocket, CONNECTION_VALID);
+		}
 	}
 
 }
@@ -525,6 +541,8 @@ void TCPMessengerServer::ConnectClients(TCPSocket* initiatorClient)
 		// Set both users as unavailable
 		markPeerAsUnavailable(initiatorUser);
 		markPeerAsUnavailable(requestedUser);
+
+		m_openSessions[initiatorUser->socket->GetDestIpAndPort()] = requestedUser->socket->GetDestIpAndPort();
 	}
 }
 
@@ -563,7 +581,7 @@ void TCPMessengerServer::EnterRoom(TCPSocket* peer)
 
 	Chat* chat = getRoomByName(roomName);
 	// Verify the room is exist already
-	if (chat != NULL)
+	if (chat == NULL)
 	{
 		sendCommandToPeer(peer, ROOM_NOT_EXIST);
 		sendDataToPeer(peer, roomName);
@@ -655,7 +673,7 @@ void TCPMessengerServer::closeSession(SUser* user)
 		sessionFound = closeSessionWithRoomIfExist(user);
 	}
 
-	if (sessionFound == false)
+	if (sessionFound == true)
 	{
 		cout << "session closed successfully" << endl;
 	}
@@ -668,7 +686,7 @@ void TCPMessengerServer::closeSession(SUser* user)
 
 bool TCPMessengerServer::closeSessionWithUserIfExist(SUser* user)
 {
-	bool sessionFound;
+	bool sessionFound = false;
 
 	map<string, string>::iterator iter = m_openSessions.begin();
 	map<string, string>::iterator iterEnd = m_openSessions.end();
@@ -775,6 +793,7 @@ void TCPMessengerServer::sendOpenSessionMsgs(SUser* firstUser, SUser* secondUser
 	// Notify the second user that the first user open session with him
 	sendCommandToPeer(secondUser->socket, SESSION_ESTABLISHED);
 	sendDataToPeer(secondUser->socket, firstStringDetails);
+//	DEBUG_PRINT("sending first userDetails (%s) to second user (%s)\n", firstStringDetails.data(), secondUser->userName.data());
 
 	vector<string> secondUserDetails;
 	secondUserDetails.push_back(secondUser->userName);
@@ -785,6 +804,7 @@ void TCPMessengerServer::sendOpenSessionMsgs(SUser* firstUser, SUser* secondUser
 	// Notify the first user that the second user open session with him
 	sendCommandToPeer(firstUser->socket, SESSION_ESTABLISHED);
 	sendDataToPeer(firstUser->socket, secondStringDetails);
+//	DEBUG_PRINT("sending second userDetails (%s) to first user (%s)\n", secondStringDetails.data(), firstUser->userName.data());
 }
 
 void TCPMessengerServer::sendCloseSessionMsgs(SUser* initiatorUser, SUser* otherUser)
@@ -842,4 +862,30 @@ string TCPMessengerServer::convertVectorDetailsToString(vector<string> userDetai
 	}
 
 	return stringDetails;
+}
+
+bool TCPMessengerServer::isUserAlreadyConnected(string userName)
+{
+	peers::iterator iter = m_openedPeers.begin();
+	peers::iterator endIter = m_openedPeers.end();
+
+	for(;iter != endIter; iter++)
+	{
+		if ((*iter).second->userName == userName)
+		{
+			return true;
+		}
+	}
+
+	iter = m_busyPeers.begin();
+	endIter = m_busyPeers.end();
+	for(;iter != endIter; iter++)
+	{
+		if ((*iter).second->userName == userName)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }

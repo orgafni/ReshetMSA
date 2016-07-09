@@ -48,6 +48,8 @@ enum ECommands
 #define TEST_PEER_NAME "test"
 #define SESSION_REFUSED_MSG "Connection to peer refused, peer might be busy or disconnected, try again later"
 
+#define DEBUG_PRINT(msg...) printf(msg)
+
 
 
 #endif /* TCPMESSENGERPROTOCOL_H_ */

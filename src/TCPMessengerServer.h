@@ -205,6 +205,8 @@ private:
 	void sendLeftRoomMsgs(SUser* userLeft, SUser* otherUser);
 
 	string convertVectorDetailsToString(vector<string> userDetails);
+
+	bool isUserAlreadyConnected(string useName);
 };
 
 #endif /* TCPMESSENGERSERVER_H_ */

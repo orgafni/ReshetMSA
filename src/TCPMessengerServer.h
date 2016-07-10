@@ -129,6 +129,11 @@ public:
 	void EnterRoom(TCPSocket* peer);
 
 	/**
+	 * This function close the room the received peer asked.
+	 */
+	void CloseRoom(TCPSocket* peer);
+
+	/**
 	 * This function disconnect the received peer from the server
 	 */
 	void Disconnect(TCPSocket* peer);

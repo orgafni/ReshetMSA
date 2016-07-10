@@ -629,6 +629,62 @@ void TCPMessengerServer::EnterRoom(TCPSocket* peer)
 	}
 }
 
+void TCPMessengerServer::CloseRoom(TCPSocket* peer)
+{
+	// Get room name from client
+	string roomName = readDataFromPeer(peer);
+
+	Chat* chat = getRoomByName(roomName);
+	// Verify the room is exist already
+	if (chat == NULL)
+	{
+		sendCommandToPeer(peer, ROOM_NOT_EXIST);
+		sendDataToPeer(peer, roomName);
+	}
+	else
+	{
+		SUser* user = GetUserBySocket(peer);
+
+		// allow closing the room only if the user asked to close is the creator
+		if (chat->GetCreatorName() != user->userName)
+		{
+			sendCommandToPeer(peer, CLOSE_ROOM_FAIL);
+			sendDataToPeer(peer, roomName);
+		}
+		else
+		{
+			// Scan all the users in the room and close their sessions
+			vector<SUser*>::iterator userIter = chat->m_connectedClients.begin();
+			vector<SUser*>::iterator userIterEnd = chat->m_connectedClients.end();
+
+			for (; userIter != userIterEnd; userIter++)
+			{
+				// Notify the userIter that he removed from the room
+				sendCommandToPeer((*userIter)->socket, CLOSE_SESSION_WITH_ROOM);
+				sendDataToPeer((*userIter)->socket, "removed");
+			}
+
+			// Notify the room creator that he succeed close the room
+			sendCommandToPeer(peer, CLOSE_ROOM);
+			sendDataToPeer(peer, roomName);
+
+			vector<Chat*>::iterator roomIter = m_chatRooms.begin();
+			vector<Chat*>::iterator roomIterEnd = m_chatRooms.end();
+
+			for(; roomIter != roomIterEnd; roomIter++)
+			{
+				if ((*roomIter)->GetRoomName() == roomName)
+				{
+					m_chatRooms.erase(roomIter);
+					break;
+				}
+			}
+
+			cout << "The room <" << roomName << "> closed by its creator <" << user->userName << ">" << endl;
+		}
+	}
+}
+
 void TCPMessengerServer::Disconnect(TCPSocket* peer)
 {
 	SUser* user = GetUserBySocket(peer);

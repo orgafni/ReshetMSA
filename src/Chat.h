@@ -28,6 +28,11 @@ public:
 		return m_roomName;
 	}
 
+	string GetCreatorName()
+	{
+		return m_creator->userName;
+	}
+
 	void AddUserToRoom(SUser* user);
 
 private:

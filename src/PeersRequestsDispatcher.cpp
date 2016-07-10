@@ -124,6 +124,11 @@ void PeersRequestsDispatcher::run()
 				m_messenger->EnterRoom(readyPeer);
 				break;
 			}
+			case (CLOSE_ROOM):
+			{
+				m_messenger->CloseRoom(readyPeer);
+				break;
+			}
 			case (DISCONNECT):
 			{
 				m_messenger->Disconnect(readyPeer);
